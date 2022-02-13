@@ -12,22 +12,22 @@
 
 <body data-bind="class: darkMode">
 
-    <div id="page-container">
-        <div id="content-wrap">
+    <div class="page-container">
+        <div class="content-wrap">
 
             <button onclick="topFunction()" id="back-to-top-button" title="Go to top">⌃</button>
 
-            <button data-bind="click: darkModeFunc" id="dark-mode-button" title="Dark Mode">
+            <button data-bind="click: darkModeFunc" class="dark-mode-button" title="Dark Mode">
                 <span data-bind="if: darkModeBool" class="dark-mode-button-text">☼️</span>
                 <span data-bind="ifnot: darkModeBool" class="dark-mode-button-text">☾</span>
             </button>
 
 
-            <h1 id="header">Educational Links for the Tech Ed</h1>
+            <h1 class="header">Educational Links for the Tech Ed</h1>
 
         </div>
 
-        <footer id="footer">
+        <footer>
             <hr />
         </footer>
     </div>
