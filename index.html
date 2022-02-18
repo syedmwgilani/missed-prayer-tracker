@@ -33,20 +33,13 @@
             </label>
             <label for="startDay">
                 <b>Day:</b>
-                <select id="startDay" data-bind="options: days, value: startDay"></select>
+                <select id="startDay" data-bind="options: startDaysOA, value: startDay"></select>
             </label>
             <label for="startYear">
                 <b>Year:</b>
                 <select id="startYear" data-bind="options: years, value: startYear"></select>
             </label>
             <p data-bind="text: startDate"></p>
-
-<!-- TODO add date validation MM/DD/YYYY
-    https://knockoutjs.com/documentation/computed-writable.html
-    TODO LOOK for isValid
-    <FormErrors showMessage={!this.state.valid_endDate && this.state.endDate !== ''} message="Please Enter a Valid Date MM/DD/YYYY or Keep Empty" />
-    <FormErrors showMessage={Date.parse(this.state.startDate) >= Date.parse(this.state.endDate)} message="Please Enter a Date Greater than the Start Date" />
--->
 
             <b>End Date:</b>
             <label for="endMonth">
@@ -55,21 +48,27 @@
             </label>
             <label for="endDay">
                 <b>Day:</b>
-                <select id="endDay" data-bind="options: days, value: endDay"></select>
+                <select id="endDay" data-bind="options: endDaysOA, value: endDay"></select>
             </label>
             <label for="endYear">
                 <b>Year:</b>
                 <select id="endYear" data-bind="options: years, value: endYear"></select>
             </label>
+            <div class="error" data-bind="if: endDateIssue">End Date is LESS THAN Start Date!</div>
             <p data-bind="text: endDate"></p>
 
-            <input type="number" data-bind="textInput: numOfDays"></input>
+            <input type="number" data-bind="textInput: calcNumOfDaysComp"></input>
 
+            <button data-bind="click: setGoal" class="" title="Set Goal">Set Goal</button>
+
+            <b>GOAL:</b>
+            <p data-bind="text: goal"></p>
 
             <h3>Missed Prayers:</h3>
 
             <p data-bind="text: currentPrayer"></p>
             <p data-bind="text: daysPrayed"></p>
+            <p data-bind="if: reachedGoal">REACHED GOAL!!!</p>
 
             <button data-bind="click: decrementPrayer">-</button>
             <button data-bind="click: incrementPrayer">+</button>
@@ -89,6 +88,7 @@
         if (localStorage.getItem('init') != 'set') {
             localStorage.setItem('init', 'set')
             localStorage.setItem('darkModeBool', false)
+            localStorage.setItem('goal', 1)
             localStorage.setItem('days prayed', 0)
             localStorage.setItem('current prayer', 0)
             localStorage.setItem('num days to increment', 1)
@@ -100,16 +100,15 @@
             self.darkModeBool = ko.observable(
                 localStorage.getItem('darkModeBool') == 'true' ? true : false
             );
-            self.darkMode = ko.computed(function () {
+            self.darkMode = ko.computed( () => {
                 localStorage.setItem('darkModeBool', self.darkModeBool())
                 return self.darkModeBool() ? 'dark-mode' : 'light-mode';
             });
-            self.darkModeFunc = function () {
+            self.darkModeFunc = () => {
                 self.darkModeBool(self.darkModeBool() ? false : true)
             }
 
-
-            self.months = ko.observableArray([
+            self.months = [
                 "01 - January",
                 "02 - February",
                 "03 - March",
@@ -122,15 +121,15 @@
                 "10 - October",
                 "11 - November",
                 "12 - December"
-            ])
+            ]
 
-            self.days = ko.observableArray([
+            self.days = [
                 "01", "02", "03", "04", "05", "06", "07", "08", "09", "10",
                 "11", "12", "13", "14", "15", "16", "17", "18", "19", "20",
                 "21", "22", "23", "24", "25", "26", "27", "28", "29", "30", "31"
-            ])
+            ]
 
-            self.years = ko.observableArray([
+            self.years = [
                 '1900', '1901', '1902', '1903', '1904', '1905', '1906', '1907', '1908', '1909', '1910',
                 '1911', '1912', '1913', '1914', '1915', '1916', '1917', '1918', '1919', '1920',
                 '1921', '1922', '1923', '1924', '1925', '1926', '1927', '1928', '1929', '1930',
@@ -144,51 +143,97 @@
                 '2001', '2002', '2003', '2004', '2005', '2006', '2007', '2008', '2009', '2010',
                 '2011', '2012', '2013', '2014', '2015', '2016', '2017', '2018', '2019', '2020',
                 '2021', '2022', '2023', '2024', '2025', '2026', '2027', '2028', '2029', '2030'
-            ])
+            ]
 
             self.prayers = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha']
 
             let today = new Date()
 
-            self.startMonth = ko.observable(self.months()[0])
-            self.endMonth = ko.observable(self.months()[today.getMonth()])
+            let leapYear = (year) => {
+                return (year % 100 == 0) ? (year % 400 == 0) : (year % 4 == 0)
+            }
 
-            self.startDay = ko.observable(self.days()[0])
-            self.endDay = ko.observable(self.days()[today.getDate() - 1])
+            self.startMonth = ko.observable(self.months[0])
+            self.startYear = ko.observable(self.years[100])
+            self.startDay = ko.observable(self.days[0])
 
-            self.startYear = ko.observable(self.years()[100])
+            self.startDaysOA = ko.observableArray(self.days.slice())
+            self.startDayComp = ko.computed(() => {
+                let month = self.startMonth()
+                let year = parseInt(self.startYear())
+                if( month == "02 - February" && leapYear(year)) {
+                    self.startDaysOA(self.days.slice(0,29))
+                } else if (month == "02 - February") {
+                    self.startDaysOA(self.days.slice(0,28))
+                } else if(  month == "04 - April" 
+                            || month == "06 - June"
+                            || month == "09 - September"
+                            || month == "11 - November"
+                         ) {
+                    self.startDaysOA(self.days.slice(0,30))
+                } else {
+                    self.startDaysOA(self.days.slice())
+                }
+            })
+
+            self.endMonth = ko.observable(self.months[today.getMonth()])
+            self.endDay = ko.observable(self.days[today.getDate() - 1])
             self.endYear = ko.observable(
                 today.getFullYear().toString()
             )
 
+            self.endDaysOA = ko.observableArray(self.days.slice())
+            self.endDayComp = ko.computed(() => {
+                let month = self.endMonth()
+                let year = parseInt(self.endYear())
+                if( month == "02 - February" && leapYear(year)) {
+                    self.endDaysOA(self.days.slice(0,29))
+                } else if (month == "02 - February") {
+                    self.endDaysOA(self.days.slice(0,28))
+                } else if(  month == "04 - April" 
+                            || month == "06 - June"
+                            || month == "09 - September"
+                            || month == "11 - November"
+                         ) {
+                    self.endDaysOA(self.days.slice(0,30))
+                } else {
+                    self.endDaysOA(self.days.slice())
+                }
+            })
+
             self.startDate = ko.pureComputed(() => {
                 return new Date(self.startMonth().slice(0, 2) + '/' + self.startDay() + '/' + self.startYear())
             })
+
+            self.endDateIssue = ko.observable(false)
             self.endDate = ko.computed(() => {
-                return new Date(self.endMonth().slice(0, 2) + '/' + self.endDay() + '/' + self.endYear())
+                let date = new Date(self.endMonth().slice(0, 2) + '/' + self.endDay() + '/' + self.endYear())
+                if( date.getTime() < self.startDate().getTime() ) { self.endDateIssue(true) }
+                else { self.endDateIssue(false) }
+                return date
             })
 
             let oneDay = 1000 * 60 * 60 * 24
-            //TODO Rename editableNumOfDays and numOfDays
-            self.editableNumOfDays = ko.observable()
 
-            self.numOfDays = ko.computed({
+            self.calcNumOfDays = ko.observable()
+            self.calcNumOfDaysComp = ko.computed({
                 read: () => {
-                    self.editableNumOfDays((self.endDate().getTime() - self.startDate().getTime()) / oneDay)
+                    self.calcNumOfDays((self.endDate().getTime() - self.startDate().getTime()) / oneDay)
                     return (self.endDate().getTime() - self.startDate().getTime()) / oneDay
                 },
                 write: (value) => {
                     let num = parseInt(value)
-                    if (isNaN(num)) { self.editableNumOfDays(0) }
-                    else { self.editableNumOfDays(num) }
+                    if (isNaN(num)) { self.calcNumOfDays(0) }
+                    else { self.calcNumOfDays(num) }
                 }
             })
 
-            //TODO create set button to set goal
-            // store value in localstorage
-            //TODO When goal equals to daysPrayed then
-            // highlight
-            self.goal = ko.observable()
+            self.goal = ko.observable( parseInt(localStorage.getItem('goal')) )
+            self.setGoal = () => {
+                localStorage.setItem('goal', self.calcNumOfDays())
+                self.goal( self.calcNumOfDays() )
+            }
+            
             self.prayer = ko.observable(parseInt(localStorage.getItem('current prayer')))
 
             self.currentPrayer = ko.pureComputed(() => {
@@ -197,7 +242,11 @@
 
             self.daysPrayed = ko.observable(parseInt(localStorage.getItem('days prayed')))
 
-            self.incrementPrayer = function () {
+            self.reachedGoal = ko.pureComputed(() => {
+                return self.daysPrayed() >= self.goal()
+            })
+
+            self.incrementPrayer = () => {
                 let prayerNum = self.prayer() + 1
                 if (prayerNum == 5) {
                     prayerNum = 0
@@ -209,7 +258,7 @@
                 localStorage.setItem('current prayer', prayerNum)
             }
 
-            self.decrementPrayer = function () {
+            self.decrementPrayer = () => {
                 let prayerNum = self.prayer() - 1
                 if (prayerNum == -1) {
                     prayerNum = 4
@@ -223,9 +272,7 @@
 
             self.numToIncrement = ko.observable(parseInt(localStorage.getItem('num days to increment')))
             self.numToIncrementComp = ko.pureComputed({
-                read: () => {
-                    return self.numToIncrement()
-                },
+                read: self.numToIncrement,
                 write: (value) => {
                     let num = parseInt(value)
                     if (isNaN(num)) {
@@ -238,7 +285,7 @@
                     }
                 }
             })
-            self.incrementDay = function () {
+            self.incrementDay = () => {
                 self.daysPrayed(self.daysPrayed() + self.numToIncrement())
                 localStorage.setItem('days prayed', self.daysPrayed())
 
@@ -246,7 +293,7 @@
                 localStorage.setItem('current prayer', self.prayer())
             }
 
-            self.decrementDay = function () {
+            self.decrementDay = () => {
                 self.daysPrayed(self.daysPrayed() - self.numToIncrement())
                 localStorage.setItem('days prayed', self.daysPrayed())
 
