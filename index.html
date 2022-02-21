@@ -96,6 +96,7 @@
                     <p data-bind="text: endDate"></p>
 
                     <input type="number" data-bind="textInput: calcNumOfDaysComp"></input>
+                    <p>PARSED VALUE: <span data-bind="text: calcNumOfDays"></span></p>
 
                     <button data-bind="click: setGoal" class="" title="Set Goal">Set Goal</button>
                 </div>
@@ -260,13 +261,15 @@
             self.calcNumOfDays = ko.observable()
             self.calcNumOfDaysComp = ko.computed({
                 read: () => {
-                    self.calcNumOfDays((self.endDate().getTime() - self.startDate().getTime()) / oneDay)
-                    return (self.endDate().getTime() - self.startDate().getTime()) / oneDay
+                    let calc = (self.endDate().getTime() - self.startDate().getTime()) / oneDay
+                    let int = parseInt(calc)
+                    self.calcNumOfDays(int)
+                    return calc
                 },
                 write: (value) => {
-                    let num = parseInt(value)
-                    if (isNaN(num)) { self.calcNumOfDays(0) }
-                    else { self.calcNumOfDays(num) }
+                    let int = parseInt(value)
+                    if (isNaN(int)) { self.calcNumOfDays(0) }
+                    else { self.calcNumOfDays(int) }
                 }
             })
 
@@ -274,6 +277,7 @@
             self.setGoal = () => {
                 localStorage.setItem('goal', self.calcNumOfDays())
                 self.goal(self.calcNumOfDays())
+                self.showCalc(false)
             }
 
             self.prayer = ko.observable(parseInt(localStorage.getItem('current prayer')))
