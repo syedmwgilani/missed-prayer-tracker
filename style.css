@@ -19,9 +19,13 @@ button {
     cursor: pointer;
 }
 
-button:hover {
-    background-color: rgb(51, 51, 51);
+@media (any-hover: hover) {
+    button:hover {
+        background-color: rgb(51, 51, 51);
+    }
 }
+
+
 
 .wrapper {
     max-width: 72ch;
@@ -101,6 +105,7 @@ button:hover {
     background-color: white;
     border: 1px solid black;
 }
+
 .dark-mode .calc-modal-content {
     background-color: rgb(17, 26, 34);
     border: 1px solid white;
