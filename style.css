@@ -58,14 +58,16 @@ button:hover {
 
 .light-mode,
 .light-mode a,
-.light-mode input {
+.light-mode input,
+.light-mode select {
     background-color: white;
     color: black;
 }
 
 .dark-mode,
 .dark-mode a,
-.dark-mode input {
+.dark-mode input,
+.dark-mode select {
     background-color: rgb(51, 51, 51);
     color: rgb(200, 200, 200);
 }
@@ -83,7 +85,6 @@ button:hover {
 }
 
 .calc-modal-content {
-    background-color: white;
     margin: 15% auto;
     padding: 1.25rem;
     width: 80%;
@@ -94,4 +95,13 @@ button:hover {
     font-size: 1.75rem;
     line-height: 1.15;
     font-weight: bold;
+}
+
+.light-mode .calc-modal-content {
+    background-color: white;
+    border: 1px solid black;
+}
+.dark-mode .calc-modal-content {
+    background-color: rgb(17, 26, 34);
+    border: 1px solid white;
 }
