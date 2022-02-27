@@ -62,7 +62,7 @@
             <div class="calc-modal">
                 <div class="calc-modal-content">
                     <button class="calc-close" data-bind="click: showCalcFunc">&times;</button>
-                    <p class="calc-title">Calculate Number of Days:</p>
+                    <p class="calc-title">Calculate Number of Days: (This calculation includes both days in the calculation)</p>
 
                     <b>Start Date:</b>
                     <label for="startMonth">
@@ -245,12 +245,14 @@
             })
 
             self.startDate = ko.pureComputed(() => {
+                //Set value to the beginning of the day
                 return new Date(self.startMonth().slice(0, 2) + '/' + self.startDay() + '/' + self.startYear())
             })
 
             self.endDateIssue = ko.observable(false)
             self.endDate = ko.computed(() => {
-                let date = new Date(self.endMonth().slice(0, 2) + '/' + self.endDay() + '/' + self.endYear())
+                //Set value to the end of the day
+                let date = new Date(self.endMonth().slice(0, 2) + '/' + self.endDay() + '/' + self.endYear() + ' 23:59:59')
                 if (date.getTime() < self.startDate().getTime()) { self.endDateIssue(true) }
                 else { self.endDateIssue(false) }
                 return date
@@ -262,14 +264,14 @@
             self.calcNumOfDaysComp = ko.computed({
                 read: () => {
                     let calc = (self.endDate().getTime() - self.startDate().getTime()) / oneDay
-                    let int = parseInt(calc)
-                    self.calcNumOfDays(int)
+                    let ceilVal = Math.ceil(parseFloat(calc))
+                    self.calcNumOfDays(ceilVal)
                     return calc
                 },
                 write: (value) => {
-                    let int = parseInt(value)
-                    if (isNaN(int)) { self.calcNumOfDays(0) }
-                    else { self.calcNumOfDays(int) }
+                    let ceilVal = Math.ceil(parseFloat(value))
+                    if (isNaN(ceilVal)) { self.calcNumOfDays(0) }
+                    else { self.calcNumOfDays(ceilVal) }
                 }
             })
 
