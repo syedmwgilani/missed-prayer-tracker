@@ -103,14 +103,15 @@
             </div>
         </div>
 
-        <b>GOAL:</b>
+        <p data-bind="text: daysPrayed"></p> /
         <p data-bind="text: goal"></p>
+        <p>GOAL</p>
+
+        <p data-bind="if: reachedGoal">REACHED GOAL!!!</p>
 
         <h3>Missed Prayers:</h3>
 
         <p data-bind="text: currentPrayer"></p>
-        <p data-bind="text: daysPrayed"></p>
-        <p data-bind="if: reachedGoal">REACHED GOAL!!!</p>
 
         <button data-bind="click: decrementPrayer">-</button>
         <button data-bind="click: incrementPrayer">+</button>
